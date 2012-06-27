@@ -2,6 +2,7 @@
 define drupal::site (
 
   $domain                  = $name,
+  $home                    = "${apache::params::web_home}/${name}",
   $aliases                 = '',
   $repo_name               = "${name}.git",
   $source                  = undef,
@@ -9,24 +10,13 @@ define drupal::site (
   $git_home                = $git::params::home,
   $git_user                = $git::params::user,
   $git_group               = $git::params::group,
-  $doc_root                = "${apache::params::web_home}/${name}",
-  $configure_firewall      = true,
-  $vhost_ip                = $apache::params::vhost_ip,
-  $vhost_priority          = $apache::params::priority,
-  $vhost_options           = $apache::params::options,
+  $site_ip                 = $apache::params::vhost_ip,
   $http_port               = $apache::params::http_port,
   $use_ssl                 = $apache::params::use_ssl,
-  $ssl_cert                = undef,
-  $ssl_key                 = undef,
   $https_port              = $apache::params::https_port,
-  $vhost_log_dir           = $apache::params::apache_log_dir,
-  $error_log_level         = undef,
-  $rewrite_log_level       = undef,
   $admin_email             = undef,
-  $vhost_http_template     = $apache::params::http_template,
-  $vhost_https_template    = $apache::params::https_template,
-  $apache_user             = $apache::params::user,
-  $apache_group            = $apache::params::group,
+  $server_user             = $apache::params::user,
+  $server_group            = $apache::params::group,
   $use_make                = true,
   $make_file               = 'drupal-org.make',
   $include_repos           = false,
@@ -50,7 +40,7 @@ define drupal::site (
   #-----------------------------------------------------------------------------
 
   $build_dir_real = $build_dir ? {
-    undef   => $doc_root,
+    undef   => $home,
     default => $build_dir,
   }
 
@@ -65,29 +55,6 @@ define drupal::site (
   $repo_name_real = $git_home ? {
     undef   => $repo_dir_real,
     default => $repo_name,
-  }
-
-  #-----------------------------------------------------------------------------
-  # Apache configurations
-
-  apache::vhost { $domain:
-    aliases            => $aliases,
-    doc_root           => $doc_root,
-    configure_firewall => $configure_firewall,
-    vhost_ip           => $vhost_ip,
-    priority           => $vhost_priority,
-    options            => $vhost_options,
-    http_port          => $http_port,
-    use_ssl            => $use_ssl,
-    ssl_cert           => $ssl_cert,
-    ssl_key            => $ssl_key,
-    https_port         => $https_port,
-    log_dir            => $vhost_log_dir,
-    error_log_level    => $error_log_level,
-    rewrite_log_level  => $rewrite_log_level,
-    admin_email        => $admin_email,
-    http_template      => $vhost_http_template,
-    https_template     => $vhost_https_template,
   }
 
   #-----------------------------------------------------------------------------
@@ -136,7 +103,7 @@ define drupal::site (
       command   => "drush make ${working_copy} '${repo_dir_real}/${make_file}' '${domain_release_dir}'",
       creates   => $domain_release_dir,
       unless    => $test_git_cmd,
-      require   => [ Class['drupal'], Apache::Vhost[$domain] ],
+      require   => Class['drupal'],
       subscribe => Exec["check-${domain}"],
     }
 
@@ -149,16 +116,16 @@ define drupal::site (
 
     exec { "link-release-${domain}":
       path        => [ '/bin', '/usr/bin' ],
-      command     => "rm -f '${doc_root}'; ln -s '${domain_release_dir}' '${doc_root}'",
+      command     => "rm -f '${home}'; ln -s '${domain_release_dir}' '${home}'",
       onlyif      => $test_release_cmd,
       subscribe   => Exec["copy-release-${domain}"],
     }
 
-    file { "secure-site-${domain}":
-      path      => "${doc_root}/sites/${site_dir}",
+    file { "site-${domain}":
+      path      => "${home}/sites",
       ensure    => 'directory',
-      owner     => $apache_user,
-      group     => $apache_group,
+      owner     => $server_user,
+      group     => $server_group,
       mode      => 770,
       subscribe => Exec["link-release-${domain}"],
     }
@@ -167,36 +134,29 @@ define drupal::site (
     #---------------------------------------------------------------------------
     # Git repositories
 
-    file { $doc_root:
+    file { "site-${domain}":
+      path      => $home,
       ensure    => 'directory',
-      owner     => $apache_user,
-      group     => $apache_group,
-      ignore    => '.git',
-      recurse   => true,
-      subscribe => Exec["check-${domain}"],
-    }
-
-    file { "secure-site-${domain}":
-      path      => "${doc_root}/sites/${site_dir}",
-      ensure    => 'directory',
-      owner     => $apache_user,
-      group     => $apache_group,
+      owner     => $server_user,
+      group     => $server_group,
       mode      => 770,
-      subscribe => File[$doc_root],
+      recurse   => true,
+      ignore    => '.git',
+      subscribe => Exec["check-${domain}"],
     }
   }
 
   #-----------------------------------------------------------------------------
   # Drupal settings
 
-  file { "configure-${domain}":
-    path      => "${doc_root}/sites/${site_dir}/settings.php",
+  file { "config-${domain}":
+    path      => "${home}/sites/${site_dir}/settings.php",
     ensure    => 'present',
-    owner     => $apache_user,
-    group     => $apache_group,
+    owner     => $server_user,
+    group     => $server_group,
     mode      => 660,
     content   => template($settings_template),
-    subscribe => File["secure-site-${domain}"],
+    subscribe => File["site-${domain}"],
   }
 
   #-----------------------------------------------------------------------------
@@ -204,23 +164,23 @@ define drupal::site (
 
   if $files_dir {
     file { "files-${domain}":
-      path      => "${doc_root}/sites/${site_dir}/files",
+      path      => "${home}/sites/${site_dir}/files",
       ensure    => 'link',
       target    => $files_dir,
-      owner     => $apache_user,
-      group     => $apache_group,
+      owner     => $server_user,
+      group     => $server_group,
       force     => true,
-      subscribe => File["secure-site-${domain}"],
+      subscribe => File["site-${domain}"],
     }
   }
   else {
     file { "files-${domain}":
-      path      => "${doc_root}/sites/${site_dir}/files",
+      path      => "${home}/sites/${site_dir}/files",
       ensure    => 'directory',
-      owner     => $apache_user,
-      group     => $apache_group,
+      owner     => $server_user,
+      group     => $server_group,
       mode      => 770,
-      subscribe => File["secure-site-${domain}"],
+      subscribe => File["site-${domain}"],
     }
   }
 
@@ -235,7 +195,4 @@ define drupal::site (
     source    => "${repo_dir_real}/.git/_COMMIT",
     subscribe => Exec["check-${domain}"],
   }
-
-  #-----------------------------------------------------------------------------
-
 }
