@@ -208,6 +208,7 @@ $databases['<%= db_name -%>']['default'] = array(
   'username'  => '<%= info['username'] ? info['username'] : db_name -%>',
   'password'  => '<%= info['password'] -%>',
   'host'      => '<%= info['host'] ? info['host'] : 'localhost' -%>',
+  'port'      => '<%= info['port'] ? info['port'] : '3306' -%>',
   'prefix'    => '<%= info['prefix'] -%>',
   'collation' => '<% info['collation'] ? info['collation'] : 'utf8_general_ci' -%>',
 );
@@ -219,6 +220,7 @@ $databases['<%= db_name -%>']['slave'][] = array(
   'username'  => '<%= slave['username'] ? slave['username'] : slave_name -%>',
   'password'  => '<%= slave['password'] -%>',
   'host'      => '<%= slave['host'] -%>',
+  'port'      => '<%= slave['port'] ? slave['port'] : '3306' -%>',
   'prefix'    => '<%= slave['prefix'] -%>',
   'collation' => '<% info['collation'] ? info['collation'] : 'utf8_general_ci' -%>',
 );
