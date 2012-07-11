@@ -4,7 +4,7 @@ define drupal::site (
   $domain                  = $name,
   $home                    = "${apache::params::web_home}/${name}",
   $aliases                 = '',
-  $repo_name               = "${name}.git",
+  $repo_name               = $name,
   $source                  = undef,
   $revision                = 'master',
   $git_home                = $git::params::home,
@@ -54,7 +54,7 @@ define drupal::site (
 
   $repo_name_real = $git_home ? {
     undef   => $repo_dir_real,
-    default => $repo_name,
+    default => "${repo_name}.git",
   }
 
   #-----------------------------------------------------------------------------
@@ -126,7 +126,8 @@ define drupal::site (
       ensure    => 'directory',
       owner     => $server_user,
       group     => $server_group,
-      mode      => 770,
+      recurse   => true,
+      ignore    => '.git',
       subscribe => Exec["link-release-${domain}"],
     }
   }
@@ -139,7 +140,6 @@ define drupal::site (
       ensure    => 'directory',
       owner     => $server_user,
       group     => $server_group,
-      mode      => 770,
       recurse   => true,
       ignore    => '.git',
       subscribe => Exec["check-${domain}"],
