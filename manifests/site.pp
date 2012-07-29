@@ -2,58 +2,55 @@
 define drupal::site (
 
   $domain                  = $name,
-  $home                    = "${apache::params::web_home}/${name}",
-  $aliases                 = '',
-  $repo_name               = $name,
-  $source                  = undef,
-  $revision                = 'master',
-  $git_home                = $git::params::home,
+  $aliases                 = $drupal::params::aliases,
+  $home                    = $drupal::params::os_home,
+  $build_dir               = $drupal::params::os_build_dir,
+  $release_dir             = $drupal::params::os_release_dir,
+  $use_make                = $drupal::params::use_make,
+  $repo_name               = $drupal::params::repo_name,
+  $git_home                = $git::params::os_home,
   $git_user                = $git::params::user,
   $git_group               = $git::params::group,
-  $site_ip                 = $apache::params::vhost_ip,
-  $http_port               = $apache::params::http_port,
-  $use_ssl                 = $apache::params::use_ssl,
-  $https_port              = $apache::params::https_port,
-  $admin_email             = undef,
-  $server_user             = $apache::params::user,
-  $server_group            = $apache::params::group,
-  $use_make                = true,
-  $make_file               = 'drupal-org.make',
-  $include_repos           = false,
-  $release_dir             = "${apache::params::web_home}/releases",
-  $build_dir               = undef,
-  $site_dir                = 'default',
-  $files_dir               = undef,
-  $databases               = undef,
-  $base_url                = undef,
-  $cookie_domain           = undef,
-  $session_max_lifetime    = undef,
-  $session_cookie_lifetime = undef,
-  $pcre_backtrack_limit    = undef,
-  $pcre_recursion_limit    = undef,
-  $ini_settings            = undef,
-  $conf                    = undef,
-  $settings_template       = 'drupal/settings.php.erb',
+  $source                  = $drupal::params::source,
+  $revision                = $drupal::params::revision,
+  $make_file               = $drupal::params::make_file,
+  $include_repos           = $drupal::params::include_repos,
+  $server_user             = $drupal::params::server_user,
+  $server_group            = $drupal::params::server_group,
+  $site_dir                = $drupal::params::site_dir,
+  $site_ip                 = $drupal::params::site_ip,
+  $admin_email             = $drupal::params::admin_email,
+  $files_dir               = $drupal::params::files_dir,
+  $databases               = $drupal::params::databases,
+  $base_url                = $drupal::params::base_url,
+  $cookie_domain           = $drupal::params::cookie_domain,
+  $session_max_lifetime    = $drupal::params::session_max_lifetime,
+  $session_cookie_lifetime = $drupal::params::session_cookie_lifetime,
+  $pcre_backtrack_limit    = $drupal::params::pcre_backtrack_limit,
+  $pcre_recursion_limit    = $drupal::params::pcre_recursion_limit,
+  $ini_settings            = $drupal::params::ini_settings,
+  $conf                    = $drupal::params::conf,
+  $settings_template       = $drupal::params::os_settings_template,
 
 ) {
 
   #-----------------------------------------------------------------------------
 
   $build_dir_real = $build_dir ? {
-    undef   => $home,
+    ''      => $home,
     default => $build_dir,
   }
 
   $repo_dir_real = $use_make ? {
-    true    => $git_home ? {
-      undef   => "${repo_name}.git",
-      default => "${git_home}/${repo_name}.git",
+    'true'    => $git_home ? {
+      ''        => "${repo_name}.git",
+      default   => "${git_home}/${repo_name}.git",
     },
     default => $build_dir_real,
   }
 
   $repo_name_real = $git_home ? {
-    undef   => $repo_dir_real,
+    ''      => $repo_dir_real,
     default => "${repo_name}.git",
   }
 
@@ -81,12 +78,6 @@ define drupal::site (
     #---------------------------------------------------------------------------
     # Distribution releases with drush make
 
-    Exec["check-${domain}"] ->
-    Exec["make-release-${domain}"] ->
-    Exec["copy-release-${domain}"] ->
-    Exec["link-release-${domain}"] ->
-    File["save-${domain}"]
-
     $date_time_str      = strftime("%F-%R")
     $domain_release_dir = "$release_dir/$date_time_str"
 
@@ -94,7 +85,7 @@ define drupal::site (
     $test_release_cmd   = "test -d '${domain_release_dir}'"
 
     $working_copy = $include_repos ? {
-      true    => '--working-copy',
+      'true'  => '--working-copy',
       default => '',
     }
 
@@ -123,13 +114,21 @@ define drupal::site (
 
     file { "site-${domain}":
       path      => "${home}/sites",
-      ensure    => 'directory',
+      ensure    => directory,
       owner     => $server_user,
       group     => $server_group,
       recurse   => true,
       ignore    => '.git',
       subscribe => Exec["link-release-${domain}"],
     }
+
+    #---
+
+    Exec["check-${domain}"] ->
+    Exec["make-release-${domain}"] ->
+    Exec["copy-release-${domain}"] ->
+    Exec["link-release-${domain}"] ->
+    File["save-${domain}"]
   }
   else {
     #---------------------------------------------------------------------------
@@ -137,13 +136,19 @@ define drupal::site (
 
     file { "site-${domain}":
       path      => $home,
-      ensure    => 'directory',
+      ensure    => directory,
       owner     => $server_user,
       group     => $server_group,
       recurse   => true,
       ignore    => '.git',
       subscribe => Exec["check-${domain}"],
     }
+
+    #---
+
+    Exec["check-${domain}"] ->
+    File["site-${domain}"] ->
+    File["save-${domain}"]
   }
 
   #-----------------------------------------------------------------------------
@@ -151,10 +156,9 @@ define drupal::site (
 
   file { "config-${domain}":
     path      => "${home}/sites/${site_dir}/settings.php",
-    ensure    => 'present',
     owner     => $server_user,
     group     => $server_group,
-    mode      => 660,
+    mode      => '0660',
     content   => template($settings_template),
     subscribe => File["site-${domain}"],
   }
@@ -165,7 +169,7 @@ define drupal::site (
   if $files_dir {
     file { "files-${domain}":
       path      => "${home}/sites/${site_dir}/files",
-      ensure    => 'link',
+      ensure    => link,
       target    => $files_dir,
       owner     => $server_user,
       group     => $server_group,
@@ -176,10 +180,10 @@ define drupal::site (
   else {
     file { "files-${domain}":
       path      => "${home}/sites/${site_dir}/files",
-      ensure    => 'directory',
+      ensure    => directory,
       owner     => $server_user,
       group     => $server_group,
-      mode      => 770,
+      mode      => '0770',
       subscribe => File["site-${domain}"],
     }
   }
@@ -191,7 +195,7 @@ define drupal::site (
     path      => "${repo_dir_real}/.git/_COMMIT.last",
     owner     => 'root',
     group     => 'root',
-    mode      => 664,
+    mode      => '0664',
     source    => "${repo_dir_real}/.git/_COMMIT",
     subscribe => Exec["check-${domain}"],
   }

@@ -201,7 +201,7 @@
  * @endcode
  */
 <% if databases.is_a? Hash -%>
-  <% databases.each do |db_name, info| -%>
+<% databases.each do |db_name, info| -%>
 $databases['<%= db_name -%>']['default'] = array(
   'driver'    => '<% info['driver'] ? info['driver'] : 'mysql' -%>',
   'database'  => '<%= info['database'] ? info['database'] : db_name -%>',
@@ -212,8 +212,8 @@ $databases['<%= db_name -%>']['default'] = array(
   'prefix'    => '<%= info['prefix'] -%>',
   'collation' => '<% info['collation'] ? info['collation'] : 'utf8_general_ci' -%>',
 );
-    <% if info['slaves'].is_a? Hash -%>
-      <% info['slaves'].each do |slave_name, slave| -%>
+<% if info['slaves'].is_a? Hash -%>
+<% info['slaves'].each do |slave_name, slave| -%>
 $databases['<%= db_name -%>']['slave'][] = array(
   'driver'    => '<% info['driver'] ? info['driver'] : 'mysql' -%>',
   'database'  => '<%= slave['database'] ? slave['database'] : slave_name -%>',
@@ -224,9 +224,9 @@ $databases['<%= db_name -%>']['slave'][] = array(
   'prefix'    => '<%= slave['prefix'] -%>',
   'collation' => '<% info['collation'] ? info['collation'] : 'utf8_general_ci' -%>',
 );
-      <% end -%>
-    <% end -%>
-  <% end -%>
+<% end -%>
+<% end -%>
+<% end -%>
 <% else -%>
 $databases = array();
 <% end -%>
@@ -284,7 +284,7 @@ $drupal_hash_salt = '';
  * It is not allowed to have a trailing slash; Drupal will add it
  * for you.
  */
-<% if defined?(defined base_url) -%>
+<% if base_url -%>
 $base_url = '<%= base_url -%>';  // NO trailing slash!
 <% end -%>
 
@@ -338,9 +338,9 @@ ini_set('pcre.recursion_limit', <%= pcre_recursion_limit ? pcre_recursion_limit 
  * Custom PHP ini settings.
  */
 <% if ini_settings.is_a? Hash -%>
-  <% ini_settings.each do |ini_name, ini_value| -%>
+<% ini_settings.each do |ini_name, ini_value| -%>
 ini_set('<%= ini_name -%>', <%= ini_value -%>);
-  <% end -%>
+<% end -%>
 <% end -%>
 
 /**
@@ -352,7 +352,7 @@ ini_set('<%= ini_name -%>', <%= ini_value -%>);
  * between your various domains. Make sure to always start the $cookie_domain
  * with a leading dot, as per RFC 2109.
  */
-<% if defined?(cookie_domain) -%>
+<% if cookie_domain -%>
 $cookie_domain = '<%= cookie_domain -%>';  // NO trailing slash!
 <% end -%>
 
@@ -558,21 +558,21 @@ $conf['404_fast_html'] = '<html xmlns="http://www.w3.org/1999/xhtml"><head><titl
  * Custom Drupal configurations:
  */
 <% if conf.is_a? Hash -%>
-  <% conf.each do |name, data| -%>
-    <% if data.is_a? Array -%>
+<% conf.each do |name, data| -%>
+<% if data.is_a? Array -%>
 $conf['<%= name -%>'] = array(
-      <% data.each do |value| -%>
+<% data.each do |value| -%>
   <%= value -%>,      
-      <% end -%>
+<% end -%>
 );
-    <% elsif data.is_a? Hash -%>
+<% elsif data.is_a? Hash -%>
 $conf['<%= name -%>'] = array(
-      <% data.each do |key, value| -%>
+<% data.each do |key, value| -%>
   '<%= key -%>' => <%= value -%>,      
-      <% end -%>
+<% end -%>
 );    
-    <% else -%>
+<% else -%>
 $conf['<%= name -%>'] = <%= data -%>;  
-    <% end -%>  
-  <% end %>
+<% end -%>  
+<% end %>
 <% end -%>

@@ -2,7 +2,7 @@
 #
 #   This module configures Drupal environments and manages Drupal sites.
 #
-#   Adrian Webb <adrian.webb@coraltg.com>
+#   Adrian Webb <adrian.webb@coraltech.net>
 #   2012-05-22
 #
 #   Tested platforms:
@@ -15,29 +15,33 @@
 #
 #   Configures Drupal environments and manages sites.
 #
-#   Provides the drupal::add_site() function.
+#   Provides the drupal::site() definition.
 #
 # Requires:
 #
 # Sample Usage:
 #
-#   class { 'drupal':
+#  class { 'drupal':
+#
 #  }
 #
 # [Remember: No empty lines between comments and class definition]
 class drupal (
 
-
+  $drush_package  = $drupal::params::drush_package,
+  $drush_ensure   = $drupal::params::drush_ensure,
+  $drush_source   = $drupal::params::drush_source,
 
 ) inherits drupal::params {
 
   #-----------------------------------------------------------------------------
   # Drupal installation
 
-  package { 'drush/drush':
-    ensure   => 'latest',
+  package { 'drush':
+    name     => $drush_package,
+    ensure   => $drush_ensure,
     provider => 'pear',
-    source   => "${drupal::params::drush_pear_channel}/drush",
+    source   => $drush_source,
     require  => Class['php'],
   }
 }
