@@ -23,15 +23,15 @@ class drupal::params {
     $site_ip                 = hiera('drupal_site_ip', $drupal::default::site_ip)
     $admin_email             = hiera('drupal_admin_email', $drupal::default::admin_email)
     $files_dir               = hiera('drupal_files_dir', $drupal::default::files_dir)
-    $databases               = hiera('drupal_databases', $drupal::default::databases)
+    $databases               = hiera_hash('drupal_databases', $drupal::default::databases)
     $base_url                = hiera('drupal_base_url', $drupal::default::base_url)
     $cookie_domain           = hiera('drupal_cookie_domain', $drupal::default::cookie_domain)
     $session_max_lifetime    = hiera('drupal_session_max_lifetime', $drupal::default::session_max_lifetime)
     $session_cookie_lifetime = hiera('drupal_session_cookie_lifetime', $drupal::default::session_cookie_lifetime)
     $pcre_backtrack_limit    = hiera('drupal_pcre_backtrack_limit', $drupal::default::pcre_backtrack_limit)
     $pcre_recursion_limit    = hiera('drupal_pcre_recursion_limit', $drupal::default::pcre_recursion_limit)
-    $ini_settings            = hiera('drupal_ini_settings', $drupal::default::ini_settings)
-    $conf                    = hiera('drupal_conf', $drupal::default::conf)
+    $ini_settings            = hiera_hash('drupal_ini_settings', $drupal::default::ini_settings)
+    $conf                    = hiera_hash('drupal_conf', $drupal::default::conf)
   }
   else {
     $drush_package           = $drupal::default::drush_package
