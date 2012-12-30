@@ -7,7 +7,6 @@ class drupal::default {
 
   $aliases                 = ''
 
-  $build_dir               = ''
   $use_make                = 'true'
   $repo_name               = 'panopoly'
   $source                  = 'git://git.drupal.org/project/panopoly.git'
@@ -28,10 +27,10 @@ class drupal::default {
 
   $base_url                = ''
   $cookie_domain           = ''
-  $session_max_lifetime    = ''
-  $session_cookie_lifetime = ''
-  $pcre_backtrack_limit    = ''
-  $pcre_recursion_limit    = ''
+  $session_max_lifetime    = '2000000'
+  $session_cookie_lifetime = '2000000'
+  $pcre_backtrack_limit    = '200000'
+  $pcre_recursion_limit    = '200000'
 
   $ini_settings            = {}
 

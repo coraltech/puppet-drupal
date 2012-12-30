@@ -31,6 +31,7 @@ class drupal (
   $drush_package  = $drupal::params::drush_package,
   $drush_ensure   = $drupal::params::drush_ensure,
   $drush_source   = $drupal::params::drush_source,
+  $release_dir    = $drupal::params::release_dir,
 
 ) inherits drupal::params {
 
@@ -43,5 +44,14 @@ class drupal (
     provider => 'pear',
     source   => $drush_source,
     require  => Class['php'],
+  }
+
+  #-----------------------------------------------------------------------------
+  # Drupal setup
+
+  file { "drupal-releases":
+    path   => $release_dir,
+    ensure => directory,
+    mode   => 0775,
   }
 }

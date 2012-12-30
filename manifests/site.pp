@@ -66,7 +66,7 @@ define drupal::site (
 
   if $use_make {
     Git::Repo {
-      update_notify => Exec["make-release-${domain}"],
+      notify => Exec["make-release-${domain}"],
     }
   }
 
@@ -95,7 +95,6 @@ define drupal::site (
       path        => [ '/bin', '/usr/bin' ],
       command     => "drush make ${working_copy} '${repo_dir_real}/${make_file}' '${domain_release_dir}'",
       creates     => $domain_release_dir,
-      refreshonly => true,
       require     => Class['drupal'],
     }
 
@@ -111,26 +110,7 @@ define drupal::site (
       command     => "rm -f '${home}'; ln -s '${domain_release_dir}' '${home}'",
       refreshonly => true,
       subscribe   => Exec["copy-release-${domain}"],
-    }
-
-    file { "site-${domain}":
-      path      => "${home}/sites",
-      ensure    => directory,
-      recurse   => true,
-      ignore    => '.git',
-      subscribe => Exec["link-release-${domain}"],
-    }
-  }
-  else {
-    #---------------------------------------------------------------------------
-    # Git repositories
-
-    file { "site-${domain}":
-      path      => $home,
-      ensure    => directory,
-      recurse   => true,
-      ignore    => '.git',
-      subscribe => Git::Repo[$repo_name_real],
+      notify      => [ File["config-${domain}"], File["files-${domain}"] ],
     }
   }
 
@@ -139,9 +119,8 @@ define drupal::site (
 
   file { "config-${domain}":
     path      => "${home}/sites/${site_dir}/settings.php",
-    mode      => '0660',
+    mode      => 0660,
     content   => template($settings_template),
-    subscribe => File["site-${domain}"],
   }
 
   #-----------------------------------------------------------------------------
@@ -153,15 +132,13 @@ define drupal::site (
       ensure    => link,
       target    => $files_dir,
       force     => true,
-      subscribe => File["site-${domain}"],
     }
   }
   else {
     file { "files-${domain}":
       path      => "${home}/sites/${site_dir}/files",
       ensure    => directory,
-      mode      => '0770',
-      subscribe => File["site-${domain}"],
+      mode      => 0770,
     }
   }
 }
