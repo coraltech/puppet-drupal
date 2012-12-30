@@ -27,7 +27,7 @@ class drupal::default {
 
   $base_url                = ''
   $cookie_domain           = ''
-  $session_max_lifetime    = '2000000'
+  $session_max_lifetime    = '200000'
   $session_cookie_lifetime = '2000000'
   $pcre_backtrack_limit    = '200000'
   $pcre_recursion_limit    = '200000'

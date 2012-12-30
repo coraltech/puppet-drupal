@@ -203,26 +203,26 @@
 <% if databases.is_a? Hash -%>
 <% databases.each do |db_name, info| -%>
 $databases['<%= db_name -%>']['default'] = array(
-  'driver'    => '<% info['driver'] ? info['driver'] : 'mysql' -%>',
+  'driver'    => '<%= info['driver'] ? info['driver'] : 'mysql' -%>',
   'database'  => '<%= info['database'] ? info['database'] : db_name -%>',
   'username'  => '<%= info['username'] ? info['username'] : db_name -%>',
   'password'  => '<%= info['password'] -%>',
   'host'      => '<%= info['host'] ? info['host'] : 'localhost' -%>',
   'port'      => '<%= info['port'] ? info['port'] : '3306' -%>',
   'prefix'    => '<%= info['prefix'] -%>',
-  'collation' => '<% info['collation'] ? info['collation'] : 'utf8_general_ci' -%>',
+  'collation' => '<%= info['collation'] ? info['collation'] : 'utf8_general_ci' -%>',
 );
 <% if info['slaves'].is_a? Hash -%>
 <% info['slaves'].each do |slave_name, slave| -%>
 $databases['<%= db_name -%>']['slave'][] = array(
-  'driver'    => '<% info['driver'] ? info['driver'] : 'mysql' -%>',
+  'driver'    => '<%= info['driver'] ? info['driver'] : 'mysql' -%>',
   'database'  => '<%= slave['database'] ? slave['database'] : slave_name -%>',
   'username'  => '<%= slave['username'] ? slave['username'] : slave_name -%>',
   'password'  => '<%= slave['password'] -%>',
   'host'      => '<%= slave['host'] -%>',
   'port'      => '<%= slave['port'] ? slave['port'] : '3306' -%>',
   'prefix'    => '<%= slave['prefix'] -%>',
-  'collation' => '<% info['collation'] ? info['collation'] : 'utf8_general_ci' -%>',
+  'collation' => '<%= info['collation'] ? info['collation'] : 'utf8_general_ci' -%>',
 );
 <% end -%>
 <% end -%>
@@ -284,7 +284,7 @@ $drupal_hash_salt = '';
  * It is not allowed to have a trailing slash; Drupal will add it
  * for you.
  */
-<% if base_url -%>
+<% if ! base_url.empty? -%>
 $base_url = '<%= base_url -%>';  // NO trailing slash!
 <% end -%>
 
@@ -314,14 +314,14 @@ ini_set('session.gc_divisor', 100);
  * a session is deleted, authenticated users are logged out, and the contents
  * of the user's $_SESSION variable is discarded.
  */
-ini_set('session.gc_maxlifetime', <%= session_max_lifetime ? session_max_lifetime : 200000 -%>);
+ini_set('session.gc_maxlifetime', <%= ! session_max_lifetime.empty? ? session_max_lifetime : 200000 -%>);
 
 /**
  * Set session cookie lifetime (in seconds), i.e. the time from the session is
  * created to the cookie expires, i.e. when the browser is expected to discard
  * the cookie. The value 0 means "until the browser is closed".
  */
-ini_set('session.cookie_lifetime', <%= session_cookie_lifetime ? session_cookie_lifetime : 2000000 -%>);
+ini_set('session.cookie_lifetime', <%= ! session_cookie_lifetime.empty? ? session_cookie_lifetime : 2000000 -%>);
 
 /**
  * If you encounter a situation where users post a large amount of text, and
@@ -331,8 +331,8 @@ ini_set('session.cookie_lifetime', <%= session_cookie_lifetime ? session_cookie_
  * and increase the limits of these variables.  For more information, see
  * http://php.net/manual/en/pcre.configuration.php.
  */
-ini_set('pcre.backtrack_limit', <%= pcre_backtrack_limit ? pcre_backtrack_limit : 200000 -%>);
-ini_set('pcre.recursion_limit', <%= pcre_recursion_limit ? pcre_recursion_limit : 200000 -%>);
+ini_set('pcre.backtrack_limit', <%= ! pcre_backtrack_limit.empty? ? pcre_backtrack_limit : 200000 -%>);
+ini_set('pcre.recursion_limit', <%= ! pcre_recursion_limit.empty? ? pcre_recursion_limit : 200000 -%>);
 
 /**
  * Custom PHP ini settings.
@@ -352,7 +352,7 @@ ini_set('<%= ini_name -%>', <%= ini_value -%>);
  * between your various domains. Make sure to always start the $cookie_domain
  * with a leading dot, as per RFC 2109.
  */
-<% if cookie_domain -%>
+<% if ! cookie_domain.empty? -%>
 $cookie_domain = '<%= cookie_domain -%>';  // NO trailing slash!
 <% end -%>
 
