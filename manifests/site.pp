@@ -95,7 +95,7 @@ define drupal::site (
       path        => [ '/bin', '/usr/bin' ],
       command     => "drush make ${working_copy} '${repo_dir_real}/${make_file}' '${domain_release_dir}'",
       creates     => $domain_release_dir,
-      require     => Class['drupal'],
+      require     => [ Class['drupal'], Git::Repo[$repo_name_real] ],
     }
 
     exec { "copy-release-${domain}":
