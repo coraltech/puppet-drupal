@@ -65,9 +65,9 @@ define drupal::site (
   # Drupal repository (pre processing)
 
   if $use_make {
-    Git::Repo {
-      notify => Exec["make-release-${domain}"],
-    }
+    #Git::Repo {
+    #  notify => Exec["make-release-${domain}"],
+    #}
   }
 
   git::repo { $repo_name_real:
@@ -95,7 +95,7 @@ define drupal::site (
       path        => [ '/bin', '/usr/bin' ],
       command     => "drush make ${working_copy} '${repo_dir_real}/${make_file}' '${domain_release_dir}'",
       creates     => $domain_release_dir,
-      require     => [ Class['drupal'], Git::Repo[$repo_name_real] ],
+      require     => [ File['drupal-releases'], Git::Repo[$repo_name_real] ],
     }
 
     exec { "copy-release-${domain}":

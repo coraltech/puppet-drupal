@@ -49,9 +49,10 @@ class drupal (
   #-----------------------------------------------------------------------------
   # Drupal setup
 
-  file { "drupal-releases":
-    path   => $release_dir,
-    ensure => directory,
-    mode   => 0775,
+  file { 'drupal-releases':
+    path    => $release_dir,
+    ensure  => directory,
+    mode    => 0775,
+    require => Package['drush'],
   }
 }
